@@ -1,0 +1,15 @@
+# corpus (working name) — a formal mathematics library admitted by decisive
+# checks: kernel verification and axiom-profile legibility.
+#
+# No dependencies: v0 content is standalone over core Lean, so `lake build`
+# is the whole kernel gate and CI needs no cache infrastructure. The
+# axiom-profile audit (`lake env lean Corpus/Audit.lean`) is the second gate.
+
+name = "corpus"
+defaultTargets = ["Corpus", "Counterexamples"]
+
+[[lean_lib]]
+name = "Corpus"
+
+[[lean_lib]]
+name = "Counterexamples"
