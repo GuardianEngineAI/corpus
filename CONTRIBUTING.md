@@ -12,7 +12,7 @@ need an explicit extension of the ledger and its checks.
    preserve the predecessor's full theorem type and universe parameters.
 3. Add a row to `Corpus/Audit.lean`, naming the entry, bridge, predecessor,
    and all three exact axiom profiles.
-4. Run the commands in the README, including the adversarial audit fixtures.
+4. Follow [TESTING.md](TESTING.md): record the intended RED, unchanged-test GREEN, and affected-suite results, then run the shared verification commands.
 5. Open a PR explaining the result and the measured change in assumptions.
 
 The union of the entry and bridge profiles must be a strict subset of the
@@ -44,3 +44,8 @@ identify the obligation being changed and add a fixture exposing the
 failure the change addresses. A proposal cannot establish its own
 admissibility by deleting or weakening its checks. The trusted policy and
 report-binding mechanism is tracked in the integration roadmap.
+
+Verification runner tests and the complete public audit run automatically on
+pushes, pull requests, and merge-group candidates. CI retains phase logs and
+source-bound run reports, including failures. See [TESTING.md](TESTING.md) for
+the supported evidence levels and remaining operator boundary.

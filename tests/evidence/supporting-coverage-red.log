@@ -1,0 +1,16 @@
+[11:37:19] corpus-relations: public audit fixtures
+ℹ [6/6] Built Corpus.Audit (1.0s)
+info: Corpus/Audit.lean:190:0: OK Corpus.Option.eq_none_iff_forall_not_mem: same-statement checked; combined profile [] ⊂ Option.eq_none_iff_forall_not_mem [Classical.choice, Quot.sound, propext]
+OK Corpus.Option.bind_eq_none': same-statement checked; combined profile [] ⊂ Option.bind_eq_none' [Classical.choice, Quot.sound, propext]
+OK Corpus.List.eq_nil_iff_forall_not_mem: same-statement checked; combined profile [] ⊂ List.eq_nil_iff_forall_not_mem [Classical.choice, Quot.sound, propext]
+OK Corpus.List.filter_eq_nil_iff: same-statement checked; combined profile [propext] ⊂ List.filter_eq_nil_iff [Classical.choice, Quot.sound, propext]
+OK Corpus.List.countP_eq_zero: same-statement checked; combined profile [Quot.sound, propext] ⊂ List.countP_eq_zero [Classical.choice, Quot.sound, propext]
+OK Corpus.List.all_eq_false: same-statement checked; combined profile [Quot.sound, propext] ⊂ List.all_eq_false [Classical.choice, Quot.sound, propext]
+OK Corpus.List.flatten_ne_nil_iff: same-statement checked; combined profile [Quot.sound, propext] ⊂ List.flatten_ne_nil_iff [Classical.choice, Quot.sound, propext]
+OK Corpus.List.findIdx_eq_length: same-statement checked; combined profile [Quot.sound, propext] ⊂ List.findIdx_eq_length [Classical.choice, Quot.sound, propext]
+audit green: 8 entries, every relation checked, every profile declared = computed, every combined narrowing strict, coverage total
+Build completed successfully (6 jobs).
+OK CorpusAuditChecks.entry: same-statement checked; combined profile [] ⊂ CorpusAuditChecks.predecessor [CorpusAuditChecks.predecessorFact]
+public admission checks: 1 valid case accepted, 4 invalid cases rejected
+public coverage checks: 12 unledgered theorem names rejected
+Corpus/AuditChecks.lean:120:0: error: coverage accepted a forged supporting registration: []

@@ -17,7 +17,7 @@ has no package dependencies.
 | Bridge | The named bridge has the checked implication endpoints, globally or under shared parameters. |
 | Assumptions | Declared profiles equal `Lean.collectAxioms` results; replacement **and bridge together** strictly narrow the predecessor's profile. |
 | No admitted holes | `sorryAx` is absent from the audited axiom closures. |
-| Ledger coverage | Non-auxiliary library theorems must be named in the audit ledger. |
+| Ledger coverage | Every theorem under `Corpus` outside the auditor's implementation module must be a replacement, bridge, or explicitly registered supporting theorem. |
 
 `same-statement` is a specific witness kind. It establishes correspondence of
 theorem types in this environment. Computational witness preservation,
@@ -25,8 +25,17 @@ logical equivalence between different statements, and axiom necessity each
 require their own evidence. Axiom profiles describe the supplied proofs;
 they do not establish the weakest possible foundations of the statements.
 
+Four supporting theorems are registered separately from the eight replacements.
+Each must be a theorem directly referenced by its registered entry or bridge,
+have an axiom profile contained in that owner's profile, and exclude `sorryAx`.
+Supporting theorems earn no independent replacement or progress credit.
+Generated-looking names receive no exemption. Auditor declarations are
+identified by their implementation module; choosing the `Corpus.Audit`
+namespace does not exempt a library theorem.
+
 The audit includes negative fixtures for unrelated statements and bridges,
-and for bridges that retain or add assumption dependencies.
+bridges that retain or add assumption dependencies, twelve unledgered theorem
+names, and a forged supporting-theorem registration.
 
 ## The initial mathematics
 
@@ -48,13 +57,13 @@ All predecessors below have the recorded profile
 ## Reproduce the checks
 
 ```sh
-lake build
-lake build Corpus.Audit
-lake env lean Corpus/Audit.lean
-lake env lean Corpus/AuditChecks.lean
+python3 -B -m unittest discover -s tests -v
+python3 -B scripts/verify.py
 ```
 
-CI runs these checks with the pinned toolchain. `Counterexamples` is a
+Python 3.10+ and the pinned Lean toolchain are required. CI runs the same
+verification runner and retains reports and phase logs, including failures.
+See [TESTING.md](TESTING.md) for the red/green discipline and evidence boundaries. `Counterexamples` is a
 first-class build target. Test-only axioms live in the audit fixtures and
 are not imported by the library root.
 

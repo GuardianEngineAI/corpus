@@ -1,0 +1,27 @@
+[11:40:06] corpus: shared relation checker export must reproduce
+public relation checker: exact namespace-only export
+[11:40:06] corpus: fresh source-only export (no build cache)
+[11:40:06] corpus: clean public library build and audit
+test_command_launch_exception_is_recorded_as_failure (test_verify.VerificationTests.test_command_launch_exception_is_recorded_as_failure) ... ok
+test_coverage_tests_cannot_silently_disappear (test_verify.VerificationTests.test_coverage_tests_cannot_silently_disappear) ... ok
+test_failed_phase_stops_and_retains_its_output (test_verify.VerificationTests.test_failed_phase_stops_and_retains_its_output) ... ok
+test_input_change_invalidates_otherwise_successful_run (test_verify.VerificationTests.test_input_change_invalidates_otherwise_successful_run) ... ok
+test_old_success_is_replaced_before_any_command_runs (test_verify.VerificationTests.test_old_success_is_replaced_before_any_command_runs) ... ok
+test_snapshot_failure_cannot_retain_old_success (test_verify.VerificationTests.test_snapshot_failure_cannot_retain_old_success) ... ok
+test_source_snapshot_binds_edits_and_runner_but_excludes_outputs (test_verify.VerificationTests.test_source_snapshot_binds_edits_and_runner_but_excludes_outputs) ... ok
+test_source_symlink_is_unavailable_instead_of_unbound (test_verify.VerificationTests.test_source_symlink_is_unavailable_instead_of_unbound) ... ok
+test_success_runs_all_phases_and_records_inputs (test_verify.VerificationTests.test_success_runs_all_phases_and_records_inputs) ... ok
+test_supporting_coverage_test_cannot_silently_disappear (test_verify.VerificationTests.test_supporting_coverage_test_cannot_silently_disappear) ... ok
+test_zero_exit_without_audit_result_is_failure (test_verify.VerificationTests.test_zero_exit_without_audit_result_is_failure) ... ok
+test_failed_runner_tests_cannot_be_hidden_by_tee (test_workflow.WorkflowTests.test_failed_runner_tests_cannot_be_hidden_by_tee) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.168s
+
+OK
+build: PASS (0.55s)
+audit-build: PASS (1.91s)
+audit: PASS (1.14s)
+adversarial: PASS (3.49s)
+Evidence: out/verification/verification.json
+[11:40:14] corpus green: fresh build, shared checker, kernel, relation, combined profiles

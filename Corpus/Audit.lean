@@ -30,9 +30,9 @@ with their universes positionally aligned, and that the bridge has the required
 endpoints. This establishes a same-statement replacement in the loaded
 environment, not axiom minimality or preservation of computational proof data.
 
-A coverage pass then asserts every non-auxiliary theorem in the `Corpus`
-namespace is ledgered — an entry added to the library but not to the ledger
-fails the audit rather than escaping it.
+A coverage pass then asserts every theorem in the `Corpus` namespace outside
+the auditor's implementation module is ledgered. Declaration spellings do not
+grant exemptions, including names commonly used for generated helpers.
 
 Run: `lake env lean Corpus/Audit.lean` (after `lake build`). Any failure is a
 `#eval` error and a nonzero exit; CI treats it as decisive. Declared profiles
@@ -146,28 +146,48 @@ def checkRow (r : Row) : CoreM (List String) := do
     IO.println s!"OK {r.entry}: same-statement checked; combined profile {fmt combined} ⊂ {r.predecessor} {fmt p}"
   return fails
 
-/-- Auxiliary declarations the coverage pass ignores (matchers, lifted
-proofs, compiler-generated structure lemmas) — everything a human did not
-name. -/
-def isAux (n : Name) : Bool :=
-  n.isInternal ||
-    match n with
-    | .str _ s =>
-        s.startsWith "match_" || s.startsWith "proof_" || s.startsWith "_" ||
-        s == "inj" || s == "injEq" || s == "sizeOf_spec" ||
-        s == "noConfusion" || s == "noConfusionType" || s == "eq_def"
-    | _ => true
+/-- Exclude only declarations originating in the auditor's implementation
+module. A library declaration cannot gain this exemption by choosing the
+`Corpus.Audit` namespace. Current-module declarations have no imported index. -/
+def isAuditImplementation (env : Environment) (n : Name) : Bool :=
+  match env.getModuleIdxFor? n with
+  | some idx => env.header.moduleNames[idx.toNat]? == some `Corpus.Audit
+  | none => env.mainModule == `Corpus.Audit
 
-/-- Every non-auxiliary theorem under `Corpus` must be a ledger row (entry or
-bridge): the anti-drift guard — content cannot land unledgered. The
-`Corpus.Audit` namespace is excluded: the auditor's own machinery is not the
-audited library (it is not imported by the library root). -/
-def coverage : CoreM (List String) := do
+/-- Explicit supporting theorems, paired with their admitted owner. They do
+not count as replacements or earn progress credit. -/
+def supportingTheorems : List (Name × Name) :=
+  [ (`Corpus.List.countP_eq_zero, `Corpus.List.countP_eq_zero._proof_1_1),
+    (`Corpus.List.findIdx_eq_length, `Corpus.List.findIdx_eq_length._proof_1_1),
+    (`Corpus.List.findIdx_eq_length, `Corpus.List.findIdx_eq_length._proof_1_2),
+    (`Corpus.List.findIdx_eq_length, `Corpus.List.findIdx_eq_length._proof_1_3) ]
+
+/-- Every theorem under `Corpus` outside the auditor's implementation module
+must be a ledger row (entry or bridge) or an explicit supporting theorem.
+Generated helpers receive no implicit exemption from their spelling.
+The library root must not import the auditor's implementation module. -/
+def coverage (support : List (Name × Name) := supportingTheorems) : CoreM (List String) := do
   let env ← getEnv
-  let listed := ledger.map (·.entry) ++ ledger.map (·.bridge)
+  let owners := ledger.map (·.entry) ++ ledger.map (·.bridge)
+  let listed := owners ++ support.map (·.2)
   let mut fails : List String := []
+  for (owner, helper) in support do
+    unless owners.contains owner do
+      fails := fails ++ [s!"supporting owner is not a ledger entry or bridge: {owner}"]
+    match ← getConstInfo owner, ← getConstInfo helper with
+    | .thmInfo ownerInfo, .thmInfo _ =>
+        unless ownerInfo.value.getUsedConstants.contains helper do
+          fails := fails ++ [s!"supporting theorem is not directly referenced by owner: {owner} -> {helper}"]
+        let ownerProfile ← profile owner
+        let helperProfile ← profile helper
+        unless subsetOf helperProfile ownerProfile do
+          fails := fails ++ [s!"supporting theorem profile exceeds owner: {owner} -> {helper}"]
+        if helperProfile.contains "sorryAx" then
+          fails := fails ++ [s!"supporting theorem reaches sorryAx: {helper}"]
+    | _, _ =>
+        fails := fails ++ [s!"supporting owner and helper must be theorems: {owner} -> {helper}"]
   for (n, ci) in env.constants.toList do
-    if (`Corpus).isPrefixOf n && !(`Corpus.Audit).isPrefixOf n && !isAux n then
+    if (`Corpus).isPrefixOf n && !isAuditImplementation env n then
       if let .thmInfo _ := ci then
         unless listed.contains n do
           fails := fails ++ [s!"unledgered theorem: {n}"]
@@ -179,7 +199,7 @@ def audit : CoreM Unit := do
     fails := fails ++ (← checkRow r)
   fails := fails ++ (← coverage)
   if fails.isEmpty then
-    IO.println s!"audit green: {ledger.length} entries, every relation checked, every profile declared = computed, every combined narrowing strict, coverage total"
+    IO.println s!"audit green: {ledger.length} entries, {supportingTheorems.length} supporting theorems, every relation checked, every profile declared = computed, every combined narrowing strict, coverage total"
   else
     throwError ("audit FAILED:\n" ++ String.intercalate "\n" fails)
 
