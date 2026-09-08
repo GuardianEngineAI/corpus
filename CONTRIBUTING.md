@@ -1,54 +1,46 @@
 # Contributing
 
-A contribution is a pull request containing Lean source and a declared axiom
-profile. Nothing about who you are enters admission; everything about what
-you wrote does.
+The current pilot supports same-statement replacements with strictly smaller
+measured axiom profiles. Proposals for new statements or other witness kinds
+need an explicit extension of the ledger and its checks.
 
-## What gates (decisive checks)
+## Adding a replacement
 
-A PR merges when these are green, and only these:
+1. Add the theorem in the appropriate `Corpus/…` module, following Mathlib's
+   naming, documentation, and placement conventions.
+2. Add a bridge with checked implication endpoints. The replacement must
+   preserve the predecessor's full theorem type and universe parameters.
+3. Add a row to `Corpus/Audit.lean`, naming the entry, bridge, predecessor,
+   and all three exact axiom profiles.
+4. Run the commands in the README, including the adversarial audit fixtures.
+5. Open a PR explaining the result and the measured change in assumptions.
 
-1. **Kernel** — `lake build` succeeds; every proof elaborates and
-   kernel-checks. No `sorry` (the audit checks `sorryAx` reachability at the
-   kernel level, so a `sorry` hidden behind a helper still fails).
-2. **Profile** — the axiom profile you declare in the audit ledger
-   (`Corpus/Audit.lean`) equals the kernel-computed one, exactly. Disclosed
-   axioms are legibility, not sin: an exotic-but-declared axiom does not
-   reject; an *undeclared* one always does, because the declaration is
-   false.
-3. **Strict narrowing** (same-statement replacements only) — a replacement
-   for an existing lemma is admitted exactly when it proves the identical
-   proposition with a strictly smaller axiom profile, certified by a bridge
-   theorem whose own profile adds nothing. Equal-or-worse on every measured
-   axis is a duplicate, not a contribution.
-4. **Ledger coverage** — every theorem you add is a row in the audit ledger.
-   Content cannot land unledgered.
-5. **Corpus checks** (operator-side) — novelty, statement-level duplicates,
-   and name collisions against the certified corpus store; the verification
-   report is posted to the PR. A name the corpus already binds to different
-   content cannot merge under that name — renaming fixes it.
+The union of the entry and bridge profiles must be a strict subset of the
+predecessor's. A bridge cannot hide an assumption that the replacement
+claims to remove. Declared profiles must equal the kernel-computed profiles,
+and every audited closure must exclude `sorryAx`.
 
-## What never gates
+This checks improvement relative to the named predecessor. It does not
+establish that no other proof already attains the same profile, or that the
+remaining assumptions are necessary. Corpus-wide comparison is a separate
+integration obligation.
 
-Lint findings, style and naming suggestions, statement-shape near-match
-notices, and any judgment of interestingness or importance. These surface on
-the PR as material for revision and for ranking — they are channels, not
-gates. Reviewers comment, suggest concrete edits, and route attention; a
-review cannot veto green checks and cannot approve past red ones.
+## Review and attribution
 
-## Conventions
+Review helps improve statements, interfaces, explanations, naming, and
+placement. Suggestions carry their reasons and scope. Submitter identity
+does not enter the mathematical verification criteria; git authorship and
+co-author credit remain intact.
 
-Mathlib's conventions apply wholesale: naming, docstrings and module docs,
-file layout, deprecation practice. Every new declaration carries a docstring
-stating what it proves and, for replacements, the predecessor and both
-profiles. Copyright headers name the human authors — attribution is visible
-by design.
+The intended merge gate is a trusted verification report for the exact
+merge candidate and environment. That operator integration is still being
+built. Current CI establishes the checks listed in the README and does not
+by itself implement automatic admission.
 
-## Adding an entry, concretely
+## Changes to verification policy
 
-1. Put the theorem in the right `Corpus/…` file (Mathlib-style placement).
-2. For a same-statement replacement: add the bridge theorem beside it.
-3. Add the ledger row in `Corpus/Audit.lean` with the declared profiles.
-4. `lake build && lake env lean Corpus/Audit.lean` — both green locally.
-5. Open the PR; the template asks for the declared profile and (for
-   replacements) the predecessor. It does not ask who you are.
+Changes to the auditor, toolchain, workflow, or supported witness kinds must
+identify the obligation being changed and add a fixture exposing the
+failure the change addresses. A proposal cannot establish its own
+admissibility by deleting or weakening its checks. The trusted policy and
+report-binding mechanism is tracked in the integration roadmap.

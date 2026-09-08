@@ -4,22 +4,35 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    name: kernel + profile audit
+    name: kernel + replacement audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
-      - name: Install elan (pinned toolchain from lean-toolchain)
+      - uses: leanprover/lean-action@50fcf42d2e460296f1a34b402e990d1b24f8b596 # v1
+        with:
+          auto-config: "false"
+          build: "true"
+          test: "false"
+          lint: "false"
+          use-github-cache: "false"
+          use-mathlib-cache: "false"
+
+      - name: Replacement audit (statement, bridge, combined profile, coverage)
         run: |
-          curl -sSfL https://github.com/leanprover/elan/releases/latest/download/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          ./elan-init -y --default-toolchain none
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          lake build Corpus.Audit
+          lake env lean Corpus/Audit.lean
 
-      - name: Kernel gate
-        run: lake build
-
-      - name: Axiom-profile audit (declared = computed, strict narrowing, coverage)
-        run: lake env lean Corpus/Audit.lean
+      - name: Adversarial audit fixtures
+        run: lake env lean Corpus/AuditChecks.lean

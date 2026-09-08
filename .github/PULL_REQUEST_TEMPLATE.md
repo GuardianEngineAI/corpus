@@ -12,12 +12,14 @@
 
 ## Replaces (same-statement replacements only)
 
-<!-- Predecessor name + its recorded profile. The entry must strictly narrow
-     it, certified by the bridge theorem beside your entry. -->
+<!-- Predecessor name + its recorded profile. State witness kind
+     `same-statement`; the entry and bridge together must strictly narrow
+     its profile while preserving its full theorem type and universes. -->
 
 ## Checklist
 
 - [ ] `lake build` green locally
 - [ ] `lake env lean Corpus/Audit.lean` green locally (ledger row added)
+- [ ] `lake build Corpus.Audit && lake env lean Corpus/AuditChecks.lean` green
 - [ ] Docstrings state the result and, for replacements, both profiles
 - [ ] Naming and placement follow Mathlib conventions

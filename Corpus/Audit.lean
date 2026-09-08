@@ -4,10 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Larsen James Close
 -/
 import Corpus
+import Corpus.Relation
 import Lean
 
 /-!
-# The axiom-profile audit
+# The replacement and axiom-profile audit
 
 The second decisive gate (the first is `lake build`, the kernel). For every
 ledger row this audit recomputes, from the kernel environment via
@@ -17,11 +18,17 @@ ledger row this audit recomputes, from the kernel environment via
 2. the bridge's profile — must equal its declared profile exactly;
 3. the predecessor's profile — the recorded fact must still hold on this
    toolchain;
-4. strict narrowing — the entry's profile must be a *proper* subset of the
-   predecessor's (a circular "reproof" that rewrites with the stock lemma
-   inherits its profile and fails here);
+4. strict narrowing — the union of the entry's and bridge's profiles must be
+   a *proper* subset of the predecessor's (an inherited or newly introduced
+   axiom cannot be hidden in the bridge);
 5. no `sorryAx` anywhere (the kernel-level no-sorry check, superseding any
    source grep).
+
+Before comparing profiles, the kernel checks that the three names denote
+theorems, that entry and predecessor have definitionally equal statement types
+with their universes positionally aligned, and that the bridge has the required
+endpoints. This establishes a same-statement replacement in the loaded
+environment, not axiom minimality or preservation of computational proof data.
 
 A coverage pass then asserts every non-auxiliary theorem in the `Corpus`
 namespace is ledgered — an entry added to the library but not to the ledger
@@ -118,9 +125,11 @@ def strictlyBelow (a b : List String) : Bool :=
 
 /-- All failures for one row (empty = green). -/
 def checkRow (r : Row) : CoreM (List String) := do
+  Corpus.Relation.check r.entry r.bridge r.predecessor
   let e ← profile r.entry
   let b ← profile r.bridge
   let p ← profile r.predecessor
+  let combined := (e ++ b).eraseDups.mergeSort (· ≤ ·)
   let mut fails : List String := []
   if e ≠ r.entryProfile then
     fails := fails ++ [s!"{r.entry}: declared {fmt r.entryProfile} ≠ computed {fmt e}"]
@@ -128,13 +137,13 @@ def checkRow (r : Row) : CoreM (List String) := do
     fails := fails ++ [s!"{r.bridge}: declared {fmt r.bridgeProfile} ≠ computed {fmt b}"]
   if p ≠ r.predecessorProfile then
     fails := fails ++ [s!"{r.predecessor}: recorded {fmt r.predecessorProfile} ≠ computed {fmt p}"]
-  unless strictlyBelow e p do
-    fails := fails ++ [s!"{r.entry}: profile {fmt e} is not a strict narrowing of {r.predecessor}'s {fmt p}"]
+  unless strictlyBelow combined p do
+    fails := fails ++ [s!"{r.entry}: combined entry/bridge profile {fmt combined} is not a strict narrowing of {r.predecessor}'s {fmt p}"]
   for prof in [e, b, p] do
     if prof.contains "sorryAx" then
       fails := fails ++ [s!"{r.entry}: sorryAx reachable"]
   if fails.isEmpty then
-    IO.println s!"OK {r.entry} {fmt e} ⊂ {r.predecessor} {fmt p}"
+    IO.println s!"OK {r.entry}: same-statement checked; combined profile {fmt combined} ⊂ {r.predecessor} {fmt p}"
   return fails
 
 /-- Auxiliary declarations the coverage pass ignores (matchers, lifted
@@ -170,7 +179,7 @@ def audit : CoreM Unit := do
     fails := fails ++ (← checkRow r)
   fails := fails ++ (← coverage)
   if fails.isEmpty then
-    IO.println s!"audit green: {ledger.length} entries, every profile declared = computed, every narrowing strict, coverage total"
+    IO.println s!"audit green: {ledger.length} entries, every relation checked, every profile declared = computed, every combined narrowing strict, coverage total"
   else
     throwError ("audit FAILED:\n" ++ String.intercalate "\n" fails)
 

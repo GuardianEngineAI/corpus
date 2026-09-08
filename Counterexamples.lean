@@ -7,11 +7,8 @@ Authors: Larsen James Close
 /-!
 # Counterexamples
 
-Negative space is content: counterexamples, independence witnesses, and
-profile-witness pairs (a classical existence beside the kernel-checked
-impossibility of a constructive one) are first-class here and face the same
-decisive checks as every other contribution.
-
-No entries yet — this root exists so the class is a build target from day
-one rather than an afterthought.
+This empty root reserves a build target for counterexamples, independence
+witnesses, and related negative results. Their witness kinds, ledger coverage,
+and admission checks remain to be defined. The current replacement audit
+covers `Corpus`; it does not yet audit this target.
 -/

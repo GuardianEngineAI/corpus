@@ -26,7 +26,7 @@ merely rewrites with the stock lemma inherits the stock profile and is caught
 by that audit, never admitted.
 -/
 
-universe u
+universe u v
 
 namespace Corpus.Option
 
@@ -61,7 +61,7 @@ theorem bridge_eq_none_iff_forall_not_mem {α : Type u} {o : Option α}
 /-- Constructive reproof of `Option.bind_eq_none'`: `o.bind f = none` iff `f`
 never maps an element of `o` to `some`. Axiom profile `∅`; the core lemma's
 profile is `[propext, Classical.choice, Quot.sound]`. -/
-theorem bind_eq_none' {α β : Type u} {o : Option α} {f : α → Option β} :
+theorem bind_eq_none' {α : Type u} {β : Type v} {o : Option α} {f : α → Option β} :
     o.bind f = none ↔ ∀ b a, o = some a → f a ≠ some b := by
   constructor
   · intro h b a hoa hfa
@@ -80,7 +80,7 @@ theorem bind_eq_none' {α β : Type u} {o : Option α} {f : α → Option β} :
 
 /-- The bridge `new ⊢ old` for `bind_eq_none'` (same statement; profile `∅`).
 See `bridge_eq_none_iff_forall_not_mem` for the rationale. -/
-theorem bridge_bind_eq_none' {α β : Type u} {o : Option α} {f : α → Option β}
+theorem bridge_bind_eq_none' {α : Type u} {β : Type v} {o : Option α} {f : α → Option β}
     (new : o.bind f = none ↔ ∀ b a, o = some a → f a ≠ some b) :
     o.bind f = none ↔ ∀ b a, o = some a → f a ≠ some b :=
   new
