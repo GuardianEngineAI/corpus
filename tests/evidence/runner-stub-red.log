@@ -1,0 +1,96 @@
+[11:35:32] corpus-runner-tests: verification runner behavioral contracts
+test_command_launch_exception_is_recorded_as_failure (test_verify.VerificationTests.test_command_launch_exception_is_recorded_as_failure) ... FAIL
+test_coverage_tests_cannot_silently_disappear (test_verify.VerificationTests.test_coverage_tests_cannot_silently_disappear) ... FAIL
+test_failed_phase_stops_and_retains_its_output (test_verify.VerificationTests.test_failed_phase_stops_and_retains_its_output) ... FAIL
+test_input_change_invalidates_otherwise_successful_run (test_verify.VerificationTests.test_input_change_invalidates_otherwise_successful_run) ... FAIL
+test_old_success_is_replaced_before_any_command_runs (test_verify.VerificationTests.test_old_success_is_replaced_before_any_command_runs) ... FAIL
+test_snapshot_failure_cannot_retain_old_success (test_verify.VerificationTests.test_snapshot_failure_cannot_retain_old_success) ... FAIL
+test_success_runs_all_phases_and_records_inputs (test_verify.VerificationTests.test_success_runs_all_phases_and_records_inputs) ... FAIL
+test_zero_exit_without_audit_result_is_failure (test_verify.VerificationTests.test_zero_exit_without_audit_result_is_failure) ... FAIL
+
+======================================================================
+FAIL: test_command_launch_exception_is_recorded_as_failure (test_verify.VerificationTests.test_command_launch_exception_is_recorded_as_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 96, in test_command_launch_exception_is_recorded_as_failure
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_coverage_tests_cannot_silently_disappear (test_verify.VerificationTests.test_coverage_tests_cannot_silently_disappear)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 74, in test_coverage_tests_cannot_silently_disappear
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_failed_phase_stops_and_retains_its_output (test_verify.VerificationTests.test_failed_phase_stops_and_retains_its_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 55, in test_failed_phase_stops_and_retains_its_output
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_input_change_invalidates_otherwise_successful_run (test_verify.VerificationTests.test_input_change_invalidates_otherwise_successful_run)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 80, in test_input_change_invalidates_otherwise_successful_run
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_old_success_is_replaced_before_any_command_runs (test_verify.VerificationTests.test_old_success_is_replaced_before_any_command_runs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 90, in test_old_success_is_replaced_before_any_command_runs
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_snapshot_failure_cannot_retain_old_success (test_verify.VerificationTests.test_snapshot_failure_cannot_retain_old_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 105, in test_snapshot_failure_cannot_retain_old_success
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_success_runs_all_phases_and_records_inputs (test_verify.VerificationTests.test_success_runs_all_phases_and_records_inputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 43, in test_success_runs_all_phases_and_records_inputs
+    self.assertEqual(self.calls, COMMANDS)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != [['lake', 'build'], ['lake', 'build', 'Cor[105 chars]an']]
+
+Second list contains 4 additional elements.
+First extra element 0:
+['lake', 'build']
+
+- []
++ [['lake', 'build'],
++  ['lake', 'build', 'Corpus.Audit'],
++  ['lake', 'env', 'lean', 'Corpus/Audit.lean'],
++  ['lake', 'env', 'lean', 'Corpus/AuditChecks.lean']]
+
+======================================================================
+FAIL: test_zero_exit_without_audit_result_is_failure (test_verify.VerificationTests.test_zero_exit_without_audit_result_is_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<corpus>/tests/test_verify.py", line 65, in test_zero_exit_without_audit_result_is_failure
+    self.assertFalse(result["complete"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.004s
+
+FAILED (failures=8)

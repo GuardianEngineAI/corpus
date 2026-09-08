@@ -16,10 +16,19 @@
      `same-statement`; the entry and bridge together must strictly narrow
      its profile while preserving its full theorem type and universes. -->
 
+## Test-first evidence
+
+<!-- Contract/witness level; baseline revision; added-test hash and exact command;
+     expected and observed RED; same-test GREEN; affected suites. Link logs.
+     Distinguish behavioral failures from import/type/compile failures. For new
+     APIs, label an executable-stub RED; label retrospective mutation checks.
+     Record unavailable checks explicitly. See TESTING.md. -->
+
 ## Checklist
 
-- [ ] `lake build` green locally
-- [ ] `lake env lean Corpus/Audit.lean` green locally (ledger row added)
-- [ ] `lake build Corpus.Audit && lake env lean Corpus/AuditChecks.lean` green
+- [ ] Expected behavioral RED and unchanged-test GREEN recorded
+- [ ] `python3 -B -m unittest discover -s tests -v` green
+- [ ] `python3 -B scripts/verify.py` green; report and phase logs inspected
+- [ ] Affected suites and any unavailable checks identified
 - [ ] Docstrings state the result and, for replacements, both profiles
 - [ ] Naming and placement follow Mathlib conventions

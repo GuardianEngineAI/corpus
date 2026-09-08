@@ -14,7 +14,9 @@ not dependencies of the library or its admitted entries. This module is never
 imported by `Corpus`.
 -/
 
-namespace Corpus.Audit.Checks
+namespace CorpusAuditChecks
+
+open Corpus.Audit
 
 axiom predecessorFact : True
 axiom additionalFact : True
@@ -38,7 +40,7 @@ def row (entry bridge predecessor : Name) : CoreM Row := do
 
 open Lean in
 def checkAdmission : CoreM Unit := do
-  let qualify (n : Name) := `Corpus.Audit.Checks ++ n
+  let qualify (n : Name) := `CorpusAuditChecks ++ n
   let good ← row (qualify `entry) (qualify `identityBridge) (qualify `predecessor)
   let goodFailures ← checkRow good
   unless goodFailures.isEmpty do
@@ -64,4 +66,57 @@ def checkAdmission : CoreM Unit := do
 
 #eval checkAdmission
 
-end Corpus.Audit.Checks
+open Lean in
+/-- Coverage must inspect theorem declarations, not infer an exemption from
+their spelling. Every probe is kernel-checked in a discarded environment;
+the reserved and numeric names exercise the environment-level boundary. -/
+def checkCoverage : CoreM Unit := do
+  let baseline ← coverage
+  unless baseline.isEmpty do
+    throwError "coverage fixture baseline is not clean: {baseline}"
+  let names : List Name :=
+    [ `Corpus.CoverageProbe.ordinary,
+      `Corpus.CoverageProbe._unledgered,
+      `Corpus.CoverageProbe.proof_unledgered,
+      `Corpus.CoverageProbe.match_unledgered,
+      `Corpus.CoverageProbe.inj,
+      `Corpus.CoverageProbe.injEq,
+      `Corpus.CoverageProbe.sizeOf_spec,
+      `Corpus.CoverageProbe.noConfusion,
+      `Corpus.CoverageProbe.noConfusionType,
+      `Corpus.CoverageProbe.eq_def,
+      .num `Corpus.CoverageProbe 7,
+      `Corpus.Audit.unledgered ]
+  let mut omitted : Array Name := #[]
+  for name in names do
+    let failures ← withoutModifyingEnv do
+      addDecl (.thmDecl {
+        name, levelParams := [], type := mkConst ``True,
+        value := mkConst ``True.intro })
+      coverage
+    unless failures == [s!"unledgered theorem: {name}"] do
+      omitted := omitted.push name
+  unless omitted.isEmpty do
+    throwError "coverage omitted kernel-checked unledgered theorems: {omitted}"
+  IO.println s!"public coverage checks: {names.length} unledgered theorem names rejected"
+
+#eval checkCoverage
+
+open Lean in
+/-- Explicit registration must not hide an unrelated theorem. Its empty
+axiom profile alone cannot establish a supporting dependency. -/
+def checkSupportingCoverage : CoreM Unit := do
+  let owner := `Corpus.Option.eq_none_iff_forall_not_mem
+  let helper := `Corpus.CoverageProbe.unreachedHelper
+  let failures ← withoutModifyingEnv do
+    addDecl (.thmDecl {
+      name := helper, levelParams := [], type := mkConst ``True,
+      value := mkConst ``True.intro })
+    coverage ((owner, helper) :: supportingTheorems)
+  unless failures.contains s!"supporting theorem is not directly referenced by owner: {owner} -> {helper}" do
+    throwError "coverage accepted a forged supporting registration: {failures}"
+  IO.println "public supporting coverage checks: forged unrelated registration rejected"
+
+#eval checkSupportingCoverage
+
+end CorpusAuditChecks

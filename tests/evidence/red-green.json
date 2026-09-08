@@ -1,0 +1,60 @@
+{
+  "scope": "development-test-evidence; not operator admission or proof of all historical TDD",
+  "date": "2026-09-08",
+  "baselinePublicCommit": "89d2876275ca7e9b935442b4cb20a0e1833225ea",
+  "cases": [
+    {
+      "contract": "Names cannot exempt library theorems from coverage",
+      "red": "coverage-red.log",
+      "observed": "11 of 12 probe names escaped the unchanged baseline auditor",
+      "green": "coverage-green.log"
+    },
+    {
+      "contract": "Explicit supporting registration requires an actual owner reference",
+      "red": "supporting-coverage-red.log",
+      "observed": "An unrelated theorem was accepted as supporting evidence",
+      "green": "coverage-green.log",
+      "unchangedTestSha256": "0cb9c759b848aa8d04acca077b58ddfa89b906aedbbd8fe00467d2af147bd137"
+    },
+    {
+      "contract": "Runner executes all phases and cannot report success on missing or failed evidence",
+      "red": "runner-stub-red.log",
+      "observed": "8 behavioral assertions failed against a deliberate new-API stub",
+      "redClassification": "executable contract stub; not old production behavior",
+      "green": "public-suite-green.log"
+    },
+    {
+      "contract": "Missing supporting-coverage tests and piped unittest failure must fail CI",
+      "red": "runner-review-red.log",
+      "observed": "2 behavioral assertions failed; 10 checks passed",
+      "green": "public-suite-green.log",
+      "unchangedTestsSha256": {
+        "tests/test_verify.py": "36f007c62e6c695e546f9c7631505c70e1fee10b78c28faf36a424f7069bf59e",
+        "tests/test_workflow.py": "eeb21734618e24282cd01bcdc17f09bbe475e436fc3f359aeb12f6c81908f217"
+      }
+    }
+  ],
+  "currentChecks": {
+    "pythonRunnerAndWorkflowTests": 12,
+    "replacementEntries": 8,
+    "supportingTheorems": 4,
+    "validAdmission": 1,
+    "invalidAdmission": 4,
+    "coverageNameProbes": 12,
+    "forgedSupportingRegistration": 1
+  },
+  "logRedaction": "Local absolute checkout path replaced with <corpus>; log hashes identify the published redacted copies.",
+  "filesSha256": {
+    "coverage-red.log": "31370a63b3f3f677748c94bcc1dd589bbcc4fbc54c72ce8e88ee8508ecc8ed78",
+    "supporting-coverage-red.log": "d1191380107bcf6df055dc6b8a61286b3919ed2c2e25bfdfb9c58e91969d1427",
+    "coverage-green.log": "241ce9915654cc638860a389e7dda7d82e88b1a1fb90ac4e3700c8d98243fffb",
+    "runner-stub-red.log": "a1e38f0664cf05ac127da00804a15a9140a64a19acbc90c782db0817fb139c7d",
+    "runner-review-red.log": "0f90070ee5077900bc264fe74d08a76255da2f8334413465dbf2a443fab95e42",
+    "public-suite-green.log": "835f82da99ccac3e4879a4253ce11470d0ecb2fefa3777fe4e9379a25b850bd7"
+  },
+  "exclusions": [
+    "Does not establish a trusted operator check",
+    "Does not claim all historical changes followed behavioral TDD",
+    "No whole-corpus or computational-witness verification"
+  ]
+}

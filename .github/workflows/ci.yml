@@ -10,29 +10,43 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: kernel + replacement audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
+      - name: Verification runner contract tests
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python3 -B -m unittest discover -s tests -v 2>&1 | tee out/runner-tests.log
+
       - uses: leanprover/lean-action@50fcf42d2e460296f1a34b402e990d1b24f8b596 # v1
         with:
           auto-config: "false"
-          build: "true"
+          build: "false"
           test: "false"
           lint: "false"
           use-github-cache: "false"
           use-mathlib-cache: "false"
 
-      - name: Replacement audit (statement, bridge, combined profile, coverage)
-        run: |
-          lake build Corpus.Audit
-          lake env lean Corpus/Audit.lean
+      - name: Build and verify with the shared local runner
+        run: python3 -B scripts/verify.py
 
-      - name: Adversarial audit fixtures
-        run: lake env lean Corpus/AuditChecks.lean
+      - name: Retain verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          retention-days: 14
+          if-no-files-found: warn
