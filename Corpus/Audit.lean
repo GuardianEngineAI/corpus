@@ -179,10 +179,24 @@ def coverage : CoreM (List String) := do
           fails := fails ++ [s!"unledgered theorem: {n}"]
   return fails
 
-def audit : CoreM Unit := do
+/-- All row failures, one run. A `same-statement` refusal from
+`Corpus.Relation.check` is recorded against its row instead of ending the
+audit, so later rows still report. Any other error (an exhausted kernel
+budget, a broken environment) still propagates. -/
+def checkRows (rows : List Row) : CoreM (List String) := do
   let mut fails : List String := []
-  for r in ledger do
-    fails := fails ++ (← checkRow r)
+  for r in rows do
+    let rowFails ← try
+      checkRow r
+    catch error =>
+      let message ← error.toMessageData.toString
+      unless message.startsWith "same-statement " do throw error
+      pure [s!"{r.entry}: {message}"]
+    fails := fails ++ rowFails
+  return fails
+
+def audit : CoreM Unit := do
+  let mut fails ← checkRows ledger
   fails := fails ++ (← coverage)
   if fails.isEmpty then
     IO.println s!"audit green: {ledger.length} entries, every relation checked, every profile declared = computed, every combined narrowing strict, coverage total"

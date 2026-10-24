@@ -93,4 +93,23 @@ def checkProfileOrder : CoreM Unit := do
 
 #eval checkProfileOrder
 
+open Lean in
+/-- A relation refusal on one row must not hide a failure on a later row. -/
+def checkFailureCollection : CoreM Unit := do
+  let qualify (n : Name) := `Corpus.Audit.Checks ++ n
+  let unrelated ← row (qualify `entry) (qualify `identityBridge) (qualify `unrelatedPredecessor)
+  let good ← row (qualify `entry) (qualify `identityBridge) (qualify `predecessor)
+  let misdeclared := { good with entryProfile := [toString (qualify `additionalFact)] }
+  let failures ← checkRows [unrelated, misdeclared]
+  match failures with
+  | [first, second] =>
+      unless (first.splitOn "same-statement ").length > 1 do
+        throwError "first row did not report its relation refusal: {failures}"
+      unless (second.splitOn "declared ").length > 1 do
+        throwError "second row did not report its profile mismatch: {failures}"
+  | _ => throwError "expected one failure per row, got {failures}"
+  IO.println "public failure-collection checks: relation refusal and later profile mismatch both reported"
+
+#eval checkFailureCollection
+
 end Corpus.Audit.Checks
