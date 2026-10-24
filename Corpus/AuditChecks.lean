@@ -26,6 +26,7 @@ theorem unrelatedPredecessor : True ∧ True := ⟨predecessorFact, predecessorF
 theorem unrelatedBridge (h : False) : False := h
 theorem retainsDebtBridge (_h : True) : True := predecessorFact
 theorem addsDebtBridge (_h : True) : True := additionalFact
+theorem twoFactPredecessor : True := (⟨predecessorFact, additionalFact⟩ : True ∧ True).1
 
 open Lean in
 /-- Build an accurately disclosed fixture; wrong endpoints cannot hide behind
@@ -63,5 +64,33 @@ def checkAdmission : CoreM Unit := do
   IO.println s!"public admission checks: 1 valid case accepted, {bad.length} invalid cases rejected"
 
 #eval checkAdmission
+
+open Lean in
+/-- A declared profile is compared as the kernel computes it, sorted. Written
+order is not evidence, but a missing or repeated name still is. -/
+def checkProfileOrder : CoreM Unit := do
+  let qualify (n : Name) := `Corpus.Audit.Checks ++ n
+  let fixture ← row (qualify `entry) (qualify `identityBridge) (qualify `twoFactPredecessor)
+  let computed := fixture.predecessorProfile
+  unless computed.length == 2 do
+    throwError "profile-order fixture needs a two-axiom predecessor, computed {computed}"
+  let reversed := computed.reverse
+  if reversed == computed then
+    throwError "profile-order fixture did not reorder {computed}"
+  let reorderedFailures ← checkRow { fixture with predecessorProfile := reversed }
+  unless reorderedFailures.isEmpty do
+    throwError "accurately declared profile rejected for its order: {reorderedFailures}"
+  let wrong : List (String × List String) :=
+    [ ("missing name", reversed.take 1),
+      ("repeated name", reversed ++ reversed.take 1) ]
+  let mut accepted : Array String := #[]
+  for (label, declared) in wrong do
+    if (← checkRow { fixture with predecessorProfile := declared }).isEmpty then
+      accepted := accepted.push label
+  unless accepted.isEmpty do
+    throwError "inaccurately declared profiles accepted: {accepted}"
+  IO.println s!"public profile-order checks: reordered profile accepted, {wrong.length} inaccurate profiles rejected"
+
+#eval checkProfileOrder
 
 end Corpus.Audit.Checks
