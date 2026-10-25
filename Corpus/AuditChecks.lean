@@ -26,6 +26,7 @@ theorem unrelatedPredecessor : True ∧ True := ⟨predecessorFact, predecessorF
 theorem unrelatedBridge (h : False) : False := h
 theorem retainsDebtBridge (_h : True) : True := predecessorFact
 theorem addsDebtBridge (_h : True) : True := additionalFact
+theorem twoFactPredecessor : True := (⟨predecessorFact, additionalFact⟩ : True ∧ True).1
 
 open Lean in
 /-- Build an accurately disclosed fixture; wrong endpoints cannot hide behind
@@ -63,5 +64,52 @@ def checkAdmission : CoreM Unit := do
   IO.println s!"public admission checks: 1 valid case accepted, {bad.length} invalid cases rejected"
 
 #eval checkAdmission
+
+open Lean in
+/-- A declared profile is compared as the kernel computes it, sorted. Written
+order is not evidence, but a missing or repeated name still is. -/
+def checkProfileOrder : CoreM Unit := do
+  let qualify (n : Name) := `Corpus.Audit.Checks ++ n
+  let fixture ← row (qualify `entry) (qualify `identityBridge) (qualify `twoFactPredecessor)
+  let computed := fixture.predecessorProfile
+  unless computed.length == 2 do
+    throwError "profile-order fixture needs a two-axiom predecessor, computed {computed}"
+  let reversed := computed.reverse
+  if reversed == computed then
+    throwError "profile-order fixture did not reorder {computed}"
+  let reorderedFailures ← checkRow { fixture with predecessorProfile := reversed }
+  unless reorderedFailures.isEmpty do
+    throwError "accurately declared profile rejected for its order: {reorderedFailures}"
+  let wrong : List (String × List String) :=
+    [ ("missing name", reversed.take 1),
+      ("repeated name", reversed ++ reversed.take 1) ]
+  let mut accepted : Array String := #[]
+  for (label, declared) in wrong do
+    if (← checkRow { fixture with predecessorProfile := declared }).isEmpty then
+      accepted := accepted.push label
+  unless accepted.isEmpty do
+    throwError "inaccurately declared profiles accepted: {accepted}"
+  IO.println s!"public profile-order checks: reordered profile accepted, {wrong.length} inaccurate profiles rejected"
+
+#eval checkProfileOrder
+
+open Lean in
+/-- A relation refusal on one row must not hide a failure on a later row. -/
+def checkFailureCollection : CoreM Unit := do
+  let qualify (n : Name) := `Corpus.Audit.Checks ++ n
+  let unrelated ← row (qualify `entry) (qualify `identityBridge) (qualify `unrelatedPredecessor)
+  let good ← row (qualify `entry) (qualify `identityBridge) (qualify `predecessor)
+  let misdeclared := { good with entryProfile := [toString (qualify `additionalFact)] }
+  let failures ← checkRows [unrelated, misdeclared]
+  match failures with
+  | [first, second] =>
+      unless (first.splitOn "same-statement ").length > 1 do
+        throwError "first row did not report its relation refusal: {failures}"
+      unless (second.splitOn "declared ").length > 1 do
+        throwError "second row did not report its profile mismatch: {failures}"
+  | _ => throwError "expected one failure per row, got {failures}"
+  IO.println "public failure-collection checks: relation refusal and later profile mismatch both reported"
+
+#eval checkFailureCollection
 
 end Corpus.Audit.Checks

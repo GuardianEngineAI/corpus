@@ -45,7 +45,8 @@ open Lean
 namespace Corpus.Audit
 
 /-- One ledger row: an admitted entry, its bridge, the core predecessor it
-replaces, and the three declared axiom profiles (sorted dotted names). -/
+replaces, and the three declared axiom profiles (dotted names; the audit sorts
+them before comparing, so their written order does not matter). -/
 structure Row where
   entry : Name
   entryProfile : List String
@@ -114,6 +115,11 @@ def profile (n : Name) : CoreM (List String) := do
   let ax ← collectAxioms n
   return (ax.toList.map (·.toString)).mergeSort (· ≤ ·)
 
+/-- A declared profile in the order `profile` computes. Sorting does not
+deduplicate, so a repeated or missing name still differs from the kernel. -/
+def normalize (xs : List String) : List String :=
+  xs.mergeSort (· ≤ ·)
+
 def fmt (xs : List String) : String :=
   "[" ++ String.intercalate ", " xs ++ "]"
 
@@ -131,11 +137,11 @@ def checkRow (r : Row) : CoreM (List String) := do
   let p ← profile r.predecessor
   let combined := (e ++ b).eraseDups.mergeSort (· ≤ ·)
   let mut fails : List String := []
-  if e ≠ r.entryProfile then
+  if e ≠ normalize r.entryProfile then
     fails := fails ++ [s!"{r.entry}: declared {fmt r.entryProfile} ≠ computed {fmt e}"]
-  if b ≠ r.bridgeProfile then
+  if b ≠ normalize r.bridgeProfile then
     fails := fails ++ [s!"{r.bridge}: declared {fmt r.bridgeProfile} ≠ computed {fmt b}"]
-  if p ≠ r.predecessorProfile then
+  if p ≠ normalize r.predecessorProfile then
     fails := fails ++ [s!"{r.predecessor}: recorded {fmt r.predecessorProfile} ≠ computed {fmt p}"]
   unless strictlyBelow combined p do
     fails := fails ++ [s!"{r.entry}: combined entry/bridge profile {fmt combined} is not a strict narrowing of {r.predecessor}'s {fmt p}"]
@@ -173,10 +179,24 @@ def coverage : CoreM (List String) := do
           fails := fails ++ [s!"unledgered theorem: {n}"]
   return fails
 
-def audit : CoreM Unit := do
+/-- All row failures, one run. A `same-statement` refusal from
+`Corpus.Relation.check` is recorded against its row instead of ending the
+audit, so later rows still report. Any other error (an exhausted kernel
+budget, a broken environment) still propagates. -/
+def checkRows (rows : List Row) : CoreM (List String) := do
   let mut fails : List String := []
-  for r in ledger do
-    fails := fails ++ (← checkRow r)
+  for r in rows do
+    let rowFails ← try
+      checkRow r
+    catch error =>
+      let message ← error.toMessageData.toString
+      unless message.startsWith "same-statement " do throw error
+      pure [s!"{r.entry}: {message}"]
+    fails := fails ++ rowFails
+  return fails
+
+def audit : CoreM Unit := do
+  let mut fails ← checkRows ledger
   fails := fails ++ (← coverage)
   if fails.isEmpty then
     IO.println s!"audit green: {ledger.length} entries, every relation checked, every profile declared = computed, every combined narrowing strict, coverage total"
